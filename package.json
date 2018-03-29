@@ -1,6 +1,6 @@
 {
   "name": "unit-tests-values-iterators",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Some utils making your testing routine simpler",
   "main": "dist/index.js",
   "scripts": {

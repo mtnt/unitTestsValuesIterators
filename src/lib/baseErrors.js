@@ -1,8 +1,8 @@
 import ExtendableError from 'es6-error';
 
 
-export class THError extends ExtendableError {
-    static domain = 'THError';
+export class UTVIError extends ExtendableError {
+    static domain = 'UTVIError';
 
     constructor(message = '') {
         super(message);
@@ -23,6 +23,6 @@ export class THError extends ExtendableError {
     }
 }
 
-export class InvalidParamsError extends RMCError {
+export class InvalidParamsError extends UTVIError {
     static domain = 'InvalidParams';
 }
