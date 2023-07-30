@@ -2,24 +2,18 @@ import ExtendableError from 'es6-error';
 
 
 export class UTVIError extends ExtendableError {
-    static domain = 'UTVIError';
-
-    constructor(message = '') {
+    constructor(message: string = '') {
         super(message);
 
-        const domains = [];
+        const domains: string[] = [];
         let prototype = Object.getPrototypeOf(this);
 
         do {
-            domains.unshift(prototype.constructor.domain);
+            domains.push(prototype.constructor.name);
             prototype = Object.getPrototypeOf(prototype);
         } while (prototype.constructor !== ExtendableError);
 
         this.message = domains.join('.') + (message ? `: ${message}` : '');
-    }
-
-    get domain() {
-        return this.constructor.domain;
     }
 }
 
