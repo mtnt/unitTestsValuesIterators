@@ -6,9 +6,9 @@
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "outDir": "./dist",
+    "baseUrl": "./",
     "noImplicitAny": true
   },
-  "exclude": ["node_modules"]
+  "include": ["src", "__tests__"],
+  "exclude": ["node_modules", "dist"]
 }
