@@ -1,12 +1,12 @@
-import { valuesMap, allValuesTypes } from '../../src/constants';
+import { allValuesTypes, testWithValues } from '../../src';
+import { valuesMap } from '../../src/constants';
 import { InvalidParamsError } from '../../src/lib/baseErrors';
-import { testValuesSync } from '../../src';
 
-describe('testValuesSync', () => {
+describe('testWithValues', () => {
   it('should call all the types if no options was passed', () => {
     const spy = jest.fn();
 
-    testValuesSync(spy);
+    testWithValues(spy);
 
     Object.entries(valuesMap).forEach(([type, values]) => {
       values.forEach(value => {
@@ -20,7 +20,7 @@ describe('testValuesSync', () => {
 
     const excludeTypes: ValueOf<typeof allValuesTypes>[] = [allValuesTypes.BOOLEAN, allValuesTypes.ARRAY];
 
-    testValuesSync(spy, { excludeTypes });
+    testWithValues(spy, { excludeTypes });
 
     (Object.entries(valuesMap) as Entries<typeof valuesMap>)
       .filter(([type]) => !excludeTypes.includes(type))
@@ -43,7 +43,7 @@ describe('testValuesSync', () => {
 
     const onlyTypes: ValueOf<typeof allValuesTypes>[] = [allValuesTypes.BOOLEAN, allValuesTypes.ARRAY];
 
-    testValuesSync(spy, { onlyTypes });
+    testWithValues(spy, { onlyTypes });
 
     (Object.entries(valuesMap) as Entries<typeof valuesMap>)
       .filter(([type]) => onlyTypes.includes(type))
@@ -67,24 +67,31 @@ describe('testValuesSync', () => {
 
     const onlyTypes: ValueOf<typeof allValuesTypes>[] = [];
 
-    testValuesSync(spy, { onlyTypes });
+    testWithValues(spy, { onlyTypes });
 
     expect(spy).toHaveBeenCalledTimes(0);
+  });
+
+  it('should throw an exception if no function passed', () => {
+    expect(() => {
+      // @ts-expect-error
+      testWithValues();
+    }).toThrowError(InvalidParamsError);
   });
 
   it('should throw an exception if the exclude and the only types are passed', () => {
     expect(() => {
       // @ts-expect-error
-      testValuesSync(() => {}, { onlyTypes: [], excludeTypes: [] });
+      testWithValues(() => {}, { onlyTypes: [], excludeTypes: [] });
     }).toThrowError(InvalidParamsError);
   });
 
-  it('should call all types and all the values if passed', () => {
+  it('should call all types and all the values array if passed', () => {
     const spy = jest.fn();
 
     const useValues = ['string', 123, () => {}];
 
-    testValuesSync(spy, { useValues });
+    testWithValues(spy, { useValues });
 
     Object.entries(valuesMap).forEach(([type, values]) => {
       values.forEach(value => {
@@ -97,39 +104,12 @@ describe('testValuesSync', () => {
     });
   });
 
-  it('should call all values and no types empty "only" array if passed', () => {
+  it('should call all types and all the values object if passed', () => {
     const spy = jest.fn();
 
-    const useValues = ['string', 123, () => {}];
+    const useValues = { string: 'string', number: 123, function: () => {} };
 
-    testValuesSync(spy, { onlyTypes: [], useValues });
-
-    Object.entries(valuesMap).forEach(([type, values]) => {
-      values.forEach(value => {
-        expect(spy).not.toHaveBeenCalledWith(value, type);
-      });
-    });
-
-    useValues.forEach((value, idx) => {
-      expect(spy).toHaveBeenCalledWith(value, `value_${idx}`);
-    });
-  });
-
-  it('should call all types and all the getters if passed', () => {
-    const spy = jest.fn();
-
-    const values = {
-      customKey0: 'string',
-      customKey1: 123,
-      customKey2: () => {},
-    };
-    const useGetters = {
-      customKey0: () => values['customKey0'],
-      customKey1: () => values['customKey1'],
-      customKey2: () => values['customKey2'],
-    };
-
-    testValuesSync(spy, { useGetters });
+    testWithValues(spy, { useValues });
 
     Object.entries(valuesMap).forEach(([type, values]) => {
       values.forEach(value => {
@@ -137,76 +117,17 @@ describe('testValuesSync', () => {
       });
     });
 
-    Object.entries(useGetters).forEach(([type, getter]) => {
-      expect(spy).toHaveBeenCalledWith(getter(), type);
+    Object.entries(useValues).forEach(([key, value]) => {
+      expect(spy).toHaveBeenCalledWith(value, key);
     });
   });
 
-  it('should call all getters and no types empty "only" array if passed', () => {
-    const spy = jest.fn();
-
-    const values = {
-      customKey0: 'string',
-      customKey1: 123,
-      customKey2: () => {},
-    };
-    const useGetters = {
-      customKey0: () => values['customKey0'],
-      customKey1: () => values['customKey1'],
-      customKey2: () => values['customKey2'],
-    };
-
-    testValuesSync(spy, { onlyTypes: [], useGetters });
-
-    Object.entries(valuesMap).forEach(([type, values]) => {
-      values.forEach(value => {
-        expect(spy).not.toHaveBeenCalledWith(value, type);
-      });
-    });
-
-    Object.entries(useGetters).forEach(([type, getter]) => {
-      expect(spy).toHaveBeenCalledWith(getter(), type);
-    });
-  });
-
-  it('should call all values and all the getters and all types', () => {
+  it('should call all values from array and no types empty "only" array if passed', () => {
     const spy = jest.fn();
 
     const useValues = ['string', 123, () => {}];
-    const useGetters = {
-      customKey0: () => useValues[0],
-      customKey1: () => useValues[1],
-      customKey2: () => useValues[2],
-    };
 
-    testValuesSync(spy, { useValues, useGetters });
-
-    Object.entries(valuesMap).forEach(([type, values]) => {
-      values.forEach(value => {
-        expect(spy).toHaveBeenCalledWith(value, type);
-      });
-    });
-
-    useValues.forEach((value, idx) => {
-      expect(spy).toHaveBeenCalledWith(value, `value_${idx}`);
-    });
-
-    Object.entries(useGetters).forEach(([type, getter]) => {
-      expect(spy).toHaveBeenCalledWith(getter(), type);
-    });
-  });
-
-  it('should call all values and all the getters and no types', () => {
-    const spy = jest.fn();
-
-    const useValues = ['string', 123, () => {}];
-    const useGetters = {
-      customKey0: () => useValues[0],
-      customKey1: () => useValues[1],
-      customKey2: () => useValues[2],
-    };
-
-    testValuesSync(spy, { onlyTypes: [], useValues, useGetters });
+    testWithValues(spy, { onlyTypes: [], useValues });
 
     Object.entries(valuesMap).forEach(([type, values]) => {
       values.forEach(value => {
@@ -217,9 +138,23 @@ describe('testValuesSync', () => {
     useValues.forEach((value, idx) => {
       expect(spy).toHaveBeenCalledWith(value, `value_${idx}`);
     });
+  });
 
-    Object.entries(useGetters).forEach(([type, getter]) => {
-      expect(spy).toHaveBeenCalledWith(getter(), type);
+  it('should call all values from object and no types empty "only" array if passed', () => {
+    const spy = jest.fn();
+
+    const useValues = { string: 'string', number: 123, function: () => {} };
+
+    testWithValues(spy, { onlyTypes: [], useValues });
+
+    Object.entries(valuesMap).forEach(([type, values]) => {
+      values.forEach(value => {
+        expect(spy).not.toHaveBeenCalledWith(value, type);
+      });
+    });
+
+    Object.entries(useValues).forEach(([key, value]) => {
+      expect(spy).toHaveBeenCalledWith(value, key);
     });
   });
 });

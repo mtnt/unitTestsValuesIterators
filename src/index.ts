@@ -1,4 +1,4 @@
-import { isNil, isFunction, difference } from 'lodash';
+import { isNil, isFunction, difference, isPlainObject, get } from 'lodash';
 
 import { allValuesTypes, valuesMap } from './constants';
 import { InvalidParamsError } from './lib/baseErrors';
@@ -20,29 +20,25 @@ type StandardValues<
 
 export type AllValues = ValueOf<typeof valuesMap>[number];
 
-export function testValuesSync<
+export function testWithValues<
   O extends ValueOf<typeof allValuesTypes>[] | undefined = undefined,
   E extends ValueOf<typeof allValuesTypes>[] | undefined = undefined,
-  V extends any[] | undefined = undefined,
-  G extends Record<PropertyKey, () => any> | undefined = undefined,
+  V extends any[] | Record<PropertyKey, any> | undefined = undefined,
 >(
   func: (
     value:
       | StandardValues<O, E>
-      | (V extends undefined ? never : NonNullable<V>[number])
-      | (G extends undefined ? never : ReturnType<ValueOf<NonNullable<G>>>),
-    type: string
+      | (V extends undefined ? never : V extends any[] ? NonNullable<V>[number] : NonNullable<V>[keyof V]),
+    type: PropertyKey
   ) => any,
   {
     onlyTypes: onlyTypesOuter,
     excludeTypes: excludeTypesOuter,
     useValues: useValuesOuter,
-    useGetters: useGettersOuter,
   }: {
     onlyTypes?: E extends undefined ? O : never;
     excludeTypes?: O extends undefined ? E : never;
     useValues?: V;
-    useGetters?: G;
   } = {}
 ) {
   if (!isFunction(func)) {
@@ -70,15 +66,63 @@ export function testValuesSync<
     });
   });
 
-  if (!isNil(useValuesOuter)) {
+  if (Array.isArray(useValuesOuter)) {
     useValuesOuter.forEach((value, idx) => {
       func(value, `value_${idx}`);
     });
+  } else if (!isNil(useValuesOuter)) {
+    Object.entries(useValuesOuter).forEach(([key, value]) => {
+      func(value, key);
+    });
+  }
+}
+
+export function testWithGettersSync<G extends Function[] | Record<PropertyKey, Function>>(
+  func: (getter: G extends any[] ? G[number] : ValueOf<G>, type: PropertyKey) => any,
+  getters: G
+) {
+  if (!isFunction(func)) {
+    throw new InvalidParamsError('There is no function to call');
+  }
+  if (!Array.isArray(getters) && !isPlainObject(getters)) {
+    throw new InvalidParamsError('There is no getters to iterate');
   }
 
-  if (!isNil(useGettersOuter)) {
-    Object.entries(useGettersOuter).forEach(([key, getter]) => {
-      func(getter(), key);
+  if (Array.isArray(getters)) {
+    getters.forEach((getter, idx) => {
+      func(getter, `value_${idx}`);
     });
+  } else {
+    Object.entries(getters).forEach(([key, getter]) => {
+      func(getter, key);
+    });
+  }
+}
+
+type PromiseFunc = (...args: any[]) => Promise<any>;
+function isPromiseFunc(value: any): value is (...args: any[]) => Promise<any> {
+  return isFunction(value);
+}
+export async function testWithGettersAsync<G extends PromiseFunc[] | Record<PropertyKey, PromiseFunc>>(
+  func: (getter: G extends any[] ? G[number] : ValueOf<G>, key: PropertyKey) => Promise<any>,
+  getters: G
+) {
+  if (!isPromiseFunc(func)) {
+    throw new InvalidParamsError('There is no function to call');
+  }
+  if (!Array.isArray(getters) && !isPlainObject(getters)) {
+    throw new InvalidParamsError('There is no getters to iterate');
+  }
+
+  if (Array.isArray(getters)) {
+    for (let idx = 0; idx < getters.length; idx++) {
+      await func(getters[idx], `value_${idx}`);
+    }
+  } else {
+    const entries = Object.entries(getters);
+
+    for (let idx = 0; idx < entries.length; idx++) {
+      await func(entries[idx][1], entries[idx][0]);
+    }
   }
 }
