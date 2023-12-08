@@ -28,7 +28,7 @@ export function testWithValues<
   func: (
     value:
       | StandardValues<O, E>
-      | (V extends undefined ? never : V extends any[] ? NonNullable<V>[number] : NonNullable<V>[keyof V]),
+      | (V extends undefined ? never : V extends readonly any[] ? NonNullable<V>[number] : NonNullable<V>[keyof V]),
     type: PropertyKey
   ) => any,
   {
@@ -78,7 +78,7 @@ export function testWithValues<
 }
 
 export function testWithGettersSync<G extends Function[] | Record<PropertyKey, Function>>(
-  func: (getter: G extends any[] ? G[number] : ValueOf<G>, type: PropertyKey) => any,
+  func: (getter: G extends readonly any[] ? G[number] : ValueOf<G>, type: PropertyKey) => any,
   getters: G
 ) {
   if (!isFunction(func)) {
@@ -104,7 +104,7 @@ function isPromiseFunc(value: any): value is (...args: any[]) => Promise<any> {
   return isFunction(value);
 }
 export async function testWithGettersAsync<G extends PromiseFunc[] | Record<PropertyKey, PromiseFunc>>(
-  func: (getter: G extends any[] ? G[number] : ValueOf<G>, key: PropertyKey) => Promise<any>,
+  func: (getter: G extends readonly any[] ? G[number] : ValueOf<G>, key: PropertyKey) => Promise<any>,
   getters: G
 ) {
   if (!isPromiseFunc(func)) {
