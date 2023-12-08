@@ -1,5 +1,7 @@
 export const allValuesTypes = {
   STRING: 'string',
+  NUMBER_STRING: 'number string',
+  BOOLEAN_STRING: 'bool string',
   NUMBER: 'number',
   INFINITY: 'infinity',
   BOOLEAN: 'boolean',
@@ -12,7 +14,9 @@ export const allValuesTypes = {
 } as const;
 
 export const valuesMap = {
-  [allValuesTypes.STRING]: ['foo', '', '0', 'false', 'true'],
+  [allValuesTypes.STRING]: ['foo', ''],
+  [allValuesTypes.NUMBER_STRING]: ['-10', '0', '10'],
+  [allValuesTypes.BOOLEAN_STRING]: ['true', 'false'],
   [allValuesTypes.NUMBER]: [-1, 0, 1],
   [allValuesTypes.INFINITY]: [Infinity, -Infinity],
   [allValuesTypes.BOOLEAN]: [true, false],
