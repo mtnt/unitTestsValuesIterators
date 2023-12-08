@@ -127,10 +127,6 @@ export async function testWithGettersAsync<G extends PromiseFunc[] | Record<Prop
   }
 }
 
-export function stringifyValue(value: any): string {
+export function stringify(value: any): string {
   return typeof value === 'symbol' ? String(value) : JSON.stringify(value);
-}
-
-export function stringifyType(type: PropertyKey) {
-  return String(type);
 }
