@@ -57,9 +57,9 @@ export class SequenceCallsBuilder<Result = undefined> {
             >[])
           : Object.values(allValuesTypes);
 
-        result[property] = standardKeysToUse.reduce<{ value: any; key: string }[]>((result, key) => {
+        result[property] = standardKeysToUse.reduce<{ value: any; type: string }[]>((result, key) => {
           for (const value of valuesMap[key]) {
-            result.push({ value, key });
+            result.push({ value, type: key });
           }
 
           return result;
