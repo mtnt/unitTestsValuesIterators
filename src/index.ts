@@ -107,6 +107,18 @@ export class SequenceCallsBuilder<Result = undefined> {
       parameters: options.parameters || ({} as Params),
     }).do();
   }
+
+  getDataset() {
+    const result: Result[] = [];
+
+    this.execute({
+      call({ preconditionResult }) {
+        result.push(preconditionResult);
+      },
+    });
+
+    return result;
+  }
 }
 
 export function stringify(value: any): string {
